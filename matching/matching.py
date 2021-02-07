@@ -21,3 +21,4 @@ data_B = processing(data_B)
 graph_possbilities = group_companies_by_word(data_B['Name Decomposition'])
 greedy_matching(data_A, data_B, graph_possbilities)
 
+    

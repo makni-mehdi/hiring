@@ -31,9 +31,9 @@ The score is going to be a ratio of score obtained from common features divided 
 This is useful to match companies who have only name as a feature for example
 """
 def overall_score(data_A, i):
-    return 5 *   (not isna(data_A['Name Decomposition'][i])) + \
-           6 * ( (not isna(data_A['Phone Number'][i])) + \
-                 (not isna(data_A['Website'][i])) ) + \
+    return 5  *  (not isna(data_A['Name Decomposition'][i])) + \
+           10 *  (not isna(data_A['Phone Number'][i])) + \
+           6  *  (not isna(data_A['Website'][i])) + \
                  (not isna(data_A['Country'][i])) + \
                  (not isna(data_A['Postal Code'][i]))
     
@@ -73,12 +73,12 @@ def name_score(set_A, set_B):
 # After having the suffix phone, we compute if it is equal or not
 def phone_score(A, B):
     if isna(A) or isna(B): return 0
-    return 8 if A == B else 0
+    return 10 if A == B else 0
 
 # After having the suffix website, we compute if it is equal or not
 def website_score(A, B):
     if isna(A) or isna(B): return 0
-    return 8 if A == B else 0
+    return 6 if A == B else 0
 
 # We check for location and penalize if it is different
 def location_score(postal_A, country_A, postal_B, country_B):
@@ -131,14 +131,11 @@ def greedy_matching(data_A, data_B, graph_possbilities):
                 if word in graph_possbilities:
                     possible_matches = possible_matches.union(graph_possbilities[word])
             highest_score = overall_score(data_A, i)
-            scores = [0 for _ in range(len(data_B))]
             for j in possible_matches:
-                scores[j] = name_score(data_A['Name Decomposition'][i], data_B['Name Decomposition'][j]) \
+                score = name_score(data_A['Name Decomposition'][i], data_B['Name Decomposition'][j]) \
                                    + website_score(data_A['Suffix Website'][i], data_B['Suffix Website'][j]) \
                                    + phone_score(data_A['Suffix Phone'][i], data_B['Suffix Phone'][j]) \
                                    + location_score(data_A['Country'][i], data_A['Postal Code'][i], data_B['Country'][j], data_B['Postal Code'][j])
-            maximum_score = max(scores)
-            j_idmax = scores.index(maximum_score)
-            highest_score = max(highest_score, overall_score(data_B, j_idmax), maximum_score)
-            if maximum_score/highest_score >= 0.5:
-                writer.writerows([[data_A['id'][i], data_B['id'][j_idmax], data_A['Name Decomposition'][i], data_B['Name Decomposition'][j_idmax], data_A['Suffix Phone'][i], data_B['Suffix Phone'][j_idmax], data_A['Suffix Website'][i], data_B['Suffix Website'][j_idmax], maximum_score/highest_score]])
+                ratio = score/highest_score
+                if  ratio > 0.3:
+                    writer.writerows([[data_A['id'][i], data_B['id'][j], data_A['Name Decomposition'][i], data_B['Name Decomposition'][j], data_A['Suffix Phone'][i], data_B['Suffix Phone'][j], data_A['Suffix Website'][i], data_B['Suffix Website'][j], min(ratio, 1)]])
